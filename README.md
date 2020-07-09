@@ -1,2 +1,2 @@
-# ARCLStream_QueueManager_WPFTest
+# ARCLManager_QueueJobManager_Demo
 Sample and test program for ARCLManager DLL
