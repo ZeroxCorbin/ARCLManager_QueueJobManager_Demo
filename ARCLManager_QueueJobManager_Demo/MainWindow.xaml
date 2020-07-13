@@ -10,9 +10,9 @@
         <StackPanel>
             <StackPanel Orientation="Horizontal">
                 <TextBox x:Name="txtConnectionString" Text="192.168.0.20:7171:adept" Width="300" VerticalContentAlignment="Center"/>
-                <Button x:Name="btnConnect" Content="Connect" Click="btnConnect_Click" Height="28" Width="96"/>
+                <Button x:Name="btnConnect" Content="Connect" Click="BtnConnect_Click" Height="28" Width="96"/>
                 <TextBox x:Name="txtSendMessage" Text="queueshow" VerticalContentAlignment="Center" Width="200"/>
-                <Button x:Name="btnSend" Content="Send" Click="btnSend_Click" Height="28" Width="96"/>
+                <Button x:Name="btnSend" Content="Send" Click="BtnSend_Click" Height="28" Width="96"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <StackPanel x:Name="stkGoalName" Width="100">
@@ -27,11 +27,14 @@
                     <ComboBox/>
                     <ComboBox/>
                 </StackPanel>
-                <Button x:Name="btnSendMulti" Content="Send" Click="btnSendMulti_Click" Height="28" Width="96"/>
+                <Button x:Name="btnSendMulti" Content="Send" Click="BtnSendMulti_Click" Height="28" Width="96"/>
 
                 <StackPanel>
                     <Label x:Name="LblIsSynced" Content="IsSynced"/>
                     <Label x:Name="LblJobCount" Content="Job Count #"/>
+                </StackPanel>
+                <StackPanel x:Name="StkJobList">
+                    
                 </StackPanel>
             </StackPanel>
             <TextBox x:Name="txtData" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" MaxHeight="360"/>

@@ -15,17 +15,14 @@ namespace ARCLStream_QueueManager_WPFTest
     /// </summary>
     public partial class MainWindow : Window
     {
-        ARCLConnection EM;
-        QueueJobManager QM;
+        ARCLConnection Connection { get; set; }
+        QueueJobManager QueueJobManager { get; set; }
 
-        public MainWindow()
-        {
-            InitializeComponent();
-        }
+        public MainWindow() => InitializeComponent();
 
-        private void btnConnect_Click(object sender, RoutedEventArgs e)
+        private void BtnConnect_Click(object sender, RoutedEventArgs e)
         {
-            EM = new ARCLConnection(txtConnectionString.Text);
+            Connection = new ARCLConnection(txtConnectionString.Text);
             SychronousCommands sychronousCommands = new SychronousCommands(txtConnectionString.Text);
             List<string> goals;
 
@@ -38,15 +35,15 @@ namespace ARCLStream_QueueManager_WPFTest
             }
             sychronousCommands.Close();
 
-            if (EM.Connect())
+            if (Connection.Connect())
             {
                 btnConnect.Background = Brushes.Green;
 
-                EM.DataReceived += EM_DataReceived;
+                Connection.DataReceived += Connection_DataReceived;
 
-                QM = new QueueJobManager(EM);
+                QueueJobManager = new QueueJobManager(Connection);
 
-                QM.Start();
+                QueueJobManager.Start();
 
                 for (int i = 0; i < 4; i++)
                 {
@@ -70,54 +67,91 @@ namespace ARCLStream_QueueManager_WPFTest
 
         private void QueueLoop(object sender)
         {
-            while (QM != null)
+            while (QueueJobManager != null)
             {
                 Dispatcher.BeginInvoke(DispatcherPriority.Render, new Action(QueueLoopLocal));
-
                 Thread.Sleep(100);
             }
         }
-        private void EM_DataReceived(object sender, string data) => 
+        private void Connection_DataReceived(object sender, string data) => 
             Dispatcher.BeginInvoke(DispatcherPriority.Render, new Action<string>(ARCLDataReceivedViewUpdate), data);
 
         private void QueueLoopLocal()
         {
-            if (QM.IsSynced)
+            if (QueueJobManager.IsSynced)
                 LblIsSynced.Background = Brushes.LightGreen;
             else
                 LblIsSynced.Background = Brushes.LightSalmon;
 
-            LblJobCount.Content = $"Job Count = {QM.Jobs.Count}";
+            LblJobCount.Content = $"Job Count = {QueueJobManager.Jobs.Count}";
+
+            StkJobList.Children.Clear();
+            foreach (KeyValuePair<string, QueueManagerJob> kv in QueueJobManager.Jobs)
+                StkJobList.Children.Add(GetJobPanel(kv.Value));
+        }
+        private StackPanel GetJobPanel(QueueManagerJob job)
+        {
+            StackPanel stk = new StackPanel()
+            {
+                Orientation = Orientation.Horizontal,
+                Tag = job.ID
+            };
+
+            stk.Children.Add(new Label()
+            {
+                Content = job.ID,
+            });
+
+            stk.Children.Add(new Label()
+            {
+                Content = job.Status.ToString(),
+            });
+            stk.Children.Add(new Label()
+            {
+                Content = job.SubStatus.ToString(),
+            });
+
+            Button btn = new Button()
+            {
+                Content = "Cancel",
+                Tag = job.ID,
+            };
+            btn.Click += Btn_Click;
+            stk.Children.Add(btn);
+
+            return stk;
+        }
+
+        private void Btn_Click(object sender, RoutedEventArgs e)
+        {
+            QueueJobManager.CancelJob(((Button)sender).Tag.ToString());
         }
 
         private void ARCLDataReceivedViewUpdate(string obj) => txtData.Text += obj;
 
-        private void btnSend_Click(object sender, RoutedEventArgs e)
-        {
-            EM.Write(txtSendMessage.Text);
-        }
+        private void BtnSend_Click(object sender, RoutedEventArgs e) => Connection.Write(txtSendMessage.Text);
 
-        private void btnSendMulti_Click(object sender, RoutedEventArgs e)
+        private void BtnSendMulti_Click(object sender, RoutedEventArgs e)
         {
-            List<QueueJobUpdateEventArgs> goals = new List<QueueJobUpdateEventArgs>();
+            List<QueueManagerJobSegment> goals = new List<QueueManagerJobSegment>();
 
             int i = 0;
             foreach (ComboBox cmb in stkGoalName.Children)
             {
                 if (cmb.SelectedIndex >= 0)
                 {
-                    QueueJobUpdateEventArgs.GoalTypes type;
+                    QueueManagerJobSegment.Types type;
                     if (cmb.SelectedIndex == 0)
-                        type = QueueJobUpdateEventArgs.GoalTypes.pickup;
+                        type = QueueManagerJobSegment.Types.pickup;
                     else
-                        type = (QueueJobUpdateEventArgs.GoalTypes)Enum.Parse(typeof(QueueJobUpdateEventArgs.GoalTypes), (string)((ComboBox)stkGoalType.Children[i]).SelectedItem);
+                        type = (QueueManagerJobSegment.Types)Enum.Parse(typeof(QueueManagerJobSegment.Types), (string)((ComboBox)stkGoalType.Children[i]).SelectedItem);
                     i++;
 
-                    goals.Add(new QueueJobUpdateEventArgs(null, (string)cmb.SelectedItem, type));
+                    goals.Add(new QueueManagerJobSegment(null, (string)cmb.SelectedItem, type));
                 }
             }
 
-            QM.QueueMulti(goals);
+            QueueJobManager.QueueMulti(goals);
         }
     }
 }
