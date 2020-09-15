@@ -87,7 +87,21 @@ namespace ARCLStream_QueueManager_WPFTest
 
             StkJobList.Children.Clear();
             foreach (KeyValuePair<string, QueueManagerJob> kv in QueueJobManager.Jobs)
-                StkJobList.Children.Add(GetJobPanel(kv.Value));
+            {
+                bool found = false;
+                foreach(StackPanel sp in StkJobList.Children)
+                {
+                    if((string)sp.Tag == kv.Value.ID)
+                    {
+                        found = true;
+                        UpdateJobPanel(kv.Value, sp);
+                        break;
+                    }
+                }
+                if(!found)
+                    StkJobList.Children.Add(GetJobPanel(kv.Value));
+            }
+                
         }
         private StackPanel GetJobPanel(QueueManagerJob job)
         {
@@ -100,15 +114,18 @@ namespace ARCLStream_QueueManager_WPFTest
             stk.Children.Add(new Label()
             {
                 Content = job.ID,
+                Tag = 1
             });
 
             stk.Children.Add(new Label()
             {
                 Content = job.Status.ToString(),
+                Tag = 2
             });
             stk.Children.Add(new Label()
             {
                 Content = job.SubStatus.ToString(),
+                Tag = 3
             });
 
             Button btn = new Button()
@@ -116,12 +133,36 @@ namespace ARCLStream_QueueManager_WPFTest
                 Content = "Cancel",
                 Tag = job.ID,
             };
-            btn.Click += Btn_Click;
-            stk.Children.Add(btn);
+            stk.Children.Add(btn); 
 
+            btn.Click += Btn_Click;
             return stk;
         }
+        private void UpdateJobPanel(QueueManagerJob job, StackPanel stack)
+        {
+            foreach(object child in stack.Children)
+            {
+                if (child is Label myObjRef)
+                {
+                    switch ((string)myObjRef.Tag)
+                    {
+                        case "1":
+                            myObjRef.Content = job.ID;
+                            break;
+                        case "2":
+                            myObjRef.Content = job.Status.ToString();
+                            break;
+                        case "3":
+                            myObjRef.Content = job.SubStatus.ToString();
+                            break;
+                        default:
 
+                            break;
+                    }
+
+                }
+            }
+        }
         private void Btn_Click(object sender, RoutedEventArgs e)
         {
             QueueJobManager.CancelJob(((Button)sender).Tag.ToString());
@@ -129,7 +170,7 @@ namespace ARCLStream_QueueManager_WPFTest
 
         private void ARCLDataReceivedViewUpdate(string obj) => txtData.Text += obj;
 
-        private void BtnSend_Click(object sender, RoutedEventArgs e) => Connection.Write(txtSendMessage.Text);
+        private void BtnSend_Click(object sender, RoutedEventArgs e) => Connection?.Write(txtSendMessage.Text);
 
         private void BtnSendMulti_Click(object sender, RoutedEventArgs e)
         {
