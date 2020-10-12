@@ -78,7 +78,7 @@ namespace ARCLStream_QueueManager_WPFTest
 
         private void QueueLoopLocal()
         {
-            if (QueueJobManager.IsSynced)
+            if (QueueJobManager.SyncState.State == SyncStates.TRUE)
                 LblIsSynced.Background = Brushes.LightGreen;
             else
                 LblIsSynced.Background = Brushes.LightSalmon;
